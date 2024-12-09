@@ -223,13 +223,18 @@ public class awsTest {
         }
     }
 
+    // 가용 영역(Availability Zones)을 출력하는 메서드
     public static void availableZones() {
 	    
         System.out.println("Available zones...");
 	    
         try {
+
+	    // 가용 영역 정보를 요청하여 결과를 반환받음
             DescribeAvailabilityZonesResult availabilityZonesResult = ec2.describeAvailabilityZones();
-            for (AvailabilityZone zone : availabilityZonesResult.getAvailabilityZones()) {
+            
+	    // 각 가용 영역 정보를 순회하며 출력
+	    for (AvailabilityZone zone : availabilityZonesResult.getAvailabilityZones()) {
                 System.out.printf("[id] %s, [region] %s, [zone] %s\n", zone.getZoneId(), zone.getRegionName(),
                         zone.getZoneName());
             }
@@ -238,17 +243,17 @@ public class awsTest {
         }
     }
 
-    // 가용 영역(Availability Zones)을 출력하는 메서드
+   // 가용 리전(Regions)을 출력하는 메서드
     public static void availableRegions() {
 	    
         System.out.println("Available regions...");
 	    
         try {
 		
-	    // 가용 영역 정보를 요청하여 결과를 반환받음
+	    // 리전 정보를 요청하여 결과를 반환받음
             DescribeRegionsResult regions_response = ec2.describeRegions();
 
-	    // 각 가용 영역 정보를 순회하며 출력
+	    // 각 리전 정보를 순회하며 출력
             for (Region region : regions_response.getRegions()) {
                 System.out.printf("[Region] %s, [Endpoint] %s\n", region.getRegionName(), region.getEndpoint());
             }
