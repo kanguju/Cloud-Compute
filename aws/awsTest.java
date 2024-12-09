@@ -47,7 +47,8 @@ public class awsTest {
             System.out.println("  7. reboot instance              8. list images            ");
             System.out.println("  9. execute condor_status        10. list instance types   ");
             System.out.println("  11. get instance details        12. create specific instance ");
-            System.out.println("  13. terminate instance          99. quit                  ");
+            System.out.println("  13. terminate instance          		                 ");
+            System.out.println("  14. listSecurityGroups          99. quit                  ");
             System.out.println("------------------------------------------------------------");
             System.out.print("Enter an integer: ");
 
@@ -130,6 +131,9 @@ public class awsTest {
                     if (!instance_id.trim().isEmpty())
                         terminateInstance(instance_id);
                     break;
+                case 14:
+   		    listSecurityGroups();
+  		    break;  
                 case 99:
                     System.out.println("bye!");
                     menu.close();
@@ -336,6 +340,20 @@ public class awsTest {
             System.err.println("Service Exception: " + ase.getMessage());
         }
     }
+    
+    public static void listSecurityGroups() {
+	    System.out.println("Listing security groups...");
+	    try {
+		DescribeSecurityGroupsResult result = ec2.describeSecurityGroups();
+		for (SecurityGroup sg : result.getSecurityGroups()) {
+		    System.out.printf("[Group ID] %s, [Group Name] %s, [Description] %s, [VPC ID] %s\n",
+		            sg.getGroupId(), sg.getGroupName(), sg.getDescription(), sg.getVpcId());
+		}
+	    } catch (AmazonServiceException ase) {
+		System.err.println("Service Exception: " + ase.getMessage());
+	    }
+    }
+
    
 }
 
