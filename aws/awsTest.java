@@ -15,15 +15,21 @@ public class awsTest {
     static AmazonEC2 ec2;
 
     private static void init() throws Exception {
+	 // AWS 자격 증명을 로드하기 위해 ProfileCredentialsProvider를 생성합니다.
         ProfileCredentialsProvider credentialsProvider = new ProfileCredentialsProvider();
         try {
+	    // 자격 증명을 가져옵니다.
             credentialsProvider.getCredentials();
         } catch (Exception e) {
+		// 자격 증명을 로드할 수 없을 때 예외를 발생시킵니다.
             throw new AmazonClientException(
                 "Cannot load the credentials from the credential profiles file. " +
                 "Please make sure that your credentials file is at the correct location (~/.aws/credentials), and is in valid format.",
                 e);
         }
+
+	 // Amazon EC2 클라이언트를 초기화합니다.
+   	 // 올바른 AWS 자격 증명과 리전 설정이 필요합니다.
         ec2 = AmazonEC2ClientBuilder.standard()
             .withCredentials(credentialsProvider)
             .withRegion("ap-southeast-2") // Set the correct AWS region
@@ -69,11 +75,13 @@ public class awsTest {
                     availableZones();
                     break;
                 case 3:
-                    System.out.print("Enter instance id: ");
-                    if (id_string.hasNext())
-                        instance_id = id_string.nextLine();
-                    if (!instance_id.trim().isEmpty())
-                        startInstance(instance_id);
+                    System.out.print("Enter instance id: "); 
+		    // 사용자가 입력한 값이 있는지 확인
+                    if (id_string.hasNext())	
+                        instance_id = id_string.nextLine(); // 사용자가 입력한 값을 instance_id 변수에 저장   
+		    // 입력받은 인스턴스 ID가 비어있지 않은지 확인
+		    if (!instance_id.trim().isEmpty())
+                        startInstance(instance_id); // 입력받은 유효한 인스턴스 ID를 사용하여 startInstance 메서드 호출
                     break;
                 case 4:
                     availableRegions();
@@ -150,40 +158,63 @@ public class awsTest {
     public static void createSpecificInstance(String instanceType) {
         System.out.println("Creating an instance of type: " + instanceType);
         try {
+	    // EC2 인스턴스 생성 요청을 구성
             RunInstancesRequest request = new RunInstancesRequest()
-                    .withImageId("ami-0a661051b89baba13") // Replace with valid AMI ID
-                    .withInstanceType(instanceType)
-                    .withMinCount(1)
-                    .withMaxCount(1)
-                    .withKeyName("cloud-test"); // Replace with your SSH Key Name
+                    .withImageId("ami-0a661051b89baba13") // // 사용할 AMI ID를 설정
+                    .withInstanceType(instanceType) // 생성할 인스턴스의 타입을 설정
+                    .withMinCount(1) // 최소 인스턴스 수 설정
+                    .withMaxCount(1) // 최대 인스턴스 수 설정
+                    .withKeyName("cloud-test"); // 사용할 SSH 키 이름을 설정
+		
+	    // EC2 클라이언트를 사용하여 요청을 실행하고 응답을 받음
             RunInstancesResult response = ec2.runInstances(request);
+
+	    // 성공적으로 생성된 인스턴스의 ID와 타입을 출력
             System.out.printf("Successfully created instance %s of type %s\n",
                     response.getReservation().getInstances().get(0).getInstanceId(), instanceType);
         } catch (AmazonServiceException ase) {
+	    // Amazon EC2 서비스와 통신 중 발생한 예외 처리
             System.err.println("Service Exception: " + ase.getMessage());
         }
     }
 
+	// EC2 인스턴스 목록을 출력하는 메서드
 	public static void listInstances() {
         System.out.println("Listing instances...");
-        boolean done = false;
+        boolean done = false; // 페이징된 응답 처리 여부를 확인하기 위한 변수
         try {
+	    // DescribeInstances 요청 객체 생성
             DescribeInstancesRequest request = new DescribeInstancesRequest();
+
+	    // 페이징 처리를 위한 루프	
             while (!done) {
+		    
+		// 요청을 실행하고 응답을 받음
                 DescribeInstancesResult response = ec2.describeInstances(request);
+		
+		// 응답 내 각 Reservation 객체 처리
                 for (Reservation reservation : response.getReservations()) {
+
+		    // 각 Reservation 내의 Instance 객체 처리
                     for (Instance instance : reservation.getInstances()) {
+			// 인스턴스의 상세 정보 출력
                         System.out.printf("[id] %s, [AMI] %s, [type] %s, [state] %10s, [monitoring state] %s\n",
                                 instance.getInstanceId(), instance.getImageId(), instance.getInstanceType(),
                                 instance.getState().getName(), instance.getMonitoring().getState());
                     }
                 }
+
+		// 다음 페이지 토큰을 설정
                 request.setNextToken(response.getNextToken());
+
+		// 다음 페이지가 없는 경우 루프 종료
                 if (response.getNextToken() == null) {
                     done = true;
                 }
             }
         } catch (AmazonServiceException ase) {
+		
+	    // AWS 서비스 호출 중 발생한 예외 처리
             System.err.println("Service Exception: " + ase.getMessage());
         }
     }
@@ -201,14 +232,21 @@ public class awsTest {
         }
     }
 
+    // 가용 영역(Availability Zones)을 출력하는 메서드
     public static void availableRegions() {
         System.out.println("Available regions...");
         try {
+		
+	    // 가용 영역 정보를 요청하여 결과를 반환받음
             DescribeRegionsResult regions_response = ec2.describeRegions();
+
+	    // 각 가용 영역 정보를 순회하며 출력
             for (Region region : regions_response.getRegions()) {
                 System.out.printf("[Region] %s, [Endpoint] %s\n", region.getRegionName(), region.getEndpoint());
             }
         } catch (AmazonServiceException ase) {
+		
+	    // AWS 서비스 호출 중 발생한 예외 처리
             System.err.println("Service Exception: " + ase.getMessage());
         }
     }
