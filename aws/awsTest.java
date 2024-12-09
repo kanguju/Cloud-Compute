@@ -46,8 +46,8 @@ public class awsTest {
             System.out.println("  5. stop instance                6. create instance        ");
             System.out.println("  7. reboot instance              8. list images            ");
             System.out.println("  9. execute condor_status        10. list instance types   ");
-            System.out.println("  11. get instance details        				");
-            System.out.println("  12. terminate instance          99. quit                  ");
+            System.out.println("  11. get instance details        12. create specific instance ");
+            System.out.println("  13. terminate instance          99. quit                  ");
             System.out.println("------------------------------------------------------------");
             System.out.print("Enter an integer: ");
 
@@ -105,7 +105,7 @@ public class awsTest {
                 case 9:
                     executeCondorStatus();
                     break;
-            	 case 10:
+                case 10:
                     listInstanceTypes();
                     break;
                 case 11:
@@ -116,6 +116,14 @@ public class awsTest {
                         getInstanceDetails(instance_id);
                     break;
                 case 12:
+                    System.out.print("Enter instance type: ");
+                    String instanceType = "";
+                    if (id_string.hasNext())
+                        instanceType = id_string.nextLine();
+                    if (!instanceType.trim().isEmpty())
+                        createSpecificInstance(instanceType);
+                    break;
+                case 13:
                     System.out.print("Enter instance id: ");
                     if (id_string.hasNext())
                         instance_id = id_string.nextLine();
@@ -133,7 +141,26 @@ public class awsTest {
         }
     }
 
-    public static void listInstances() {
+
+
+    public static void createSpecificInstance(String instanceType) {
+        System.out.println("Creating an instance of type: " + instanceType);
+        try {
+            RunInstancesRequest request = new RunInstancesRequest()
+                    .withImageId("ami-0a661051b89baba13") // Replace with valid AMI ID
+                    .withInstanceType(instanceType)
+                    .withMinCount(1)
+                    .withMaxCount(1)
+                    .withKeyName("cloud-test"); // Replace with your SSH Key Name
+            RunInstancesResult response = ec2.runInstances(request);
+            System.out.printf("Successfully created instance %s of type %s\n",
+                    response.getReservation().getInstances().get(0).getInstanceId(), instanceType);
+        } catch (AmazonServiceException ase) {
+            System.err.println("Service Exception: " + ase.getMessage());
+        }
+    }
+
+	public static void listInstances() {
         System.out.println("Listing instances...");
         boolean done = false;
         try {
@@ -223,7 +250,7 @@ public class awsTest {
 		        .withInstanceType(InstanceType.T2Micro) // 기본 인스턴스 유형
 		        .withMinCount(1)
 		        .withMaxCount(1)
-		        .withKeyName("YourKeyName"); // SSH 키 이름으로 변경 필요
+		        .withKeyName("cloud-test"); // SSH 키 이름으로 변경 필요
 
 		RunInstancesResult run_response = ec2.runInstances(run_request);
 		String instance_id = run_response.getReservation().getInstances().get(0).getInstanceId();
@@ -309,5 +336,6 @@ public class awsTest {
             System.err.println("Service Exception: " + ase.getMessage());
         }
     }
+   
 }
 
