@@ -287,6 +287,7 @@ public class awsTest {
         System.out.printf("Stopping instance %s...\n", instance_id);
 	    
         try {
+	    // EC2 인스턴스를 시작하기 위한 요청 객체 생성
             StopInstancesRequest request = new StopInstancesRequest().withInstanceIds(instance_id);
             ec2.stopInstances(request);
             System.out.printf("Successfully stopped instance %s\n", instance_id);
@@ -295,77 +296,116 @@ public class awsTest {
         }
     }
 
+    // 주어진 인스턴스 ID를 사용하여 EC2 인스턴스를 재부팅하는 메서드
     public static void rebootInstance(String instance_id) {
-	    
+
         System.out.printf("Rebooting instance %s...\n", instance_id);
 	    
         try {
+	    // EC2 인스턴스를 재부팅하기 위한 요청 객체 생성
             RebootInstancesRequest request = new RebootInstancesRequest().withInstanceIds(instance_id);
-            ec2.rebootInstances(request);
+            
+	    // 요청을 실행하여 인스턴스를 재부팅
+	    ec2.rebootInstances(request);
             System.out.printf("Successfully rebooted instance %s\n", instance_id);
         } catch (AmazonServiceException ase) {
             System.err.println("Service Exception: " + ase.getMessage());
         }
     }
-    
+
+    // 주어진 AMI ID를 사용하여 새로운 EC2 인스턴스를 생성하는 메서드
     public static void createInstance(String ami_id) {
 	    
     System.out.printf("Creating instance with AMI %s...\n", ami_id);
 	    
     try {
+	        // EC2 인스턴스 생성 요청 객체 생성
 		RunInstancesRequest run_request = new RunInstancesRequest()
 		        .withImageId(ami_id)
-		        .withInstanceType(InstanceType.T2Micro) // 기본 인스턴스 유형
-		        .withMinCount(1)
-		        .withMaxCount(1)
-		        .withKeyName("cloud-test"); // SSH 키 이름으로 변경 필요
+		        .withInstanceType(InstanceType.T2Micro) // 생성할 인스턴스 유형
+		        .withMinCount(1) // 최소 인스턴스 개수 
+		        .withMaxCount(1) // 최대 인스턴스 개수 
+		        .withKeyName("cloud-test"); // 사용할 SSH 키 이름
 
+	    	// 요청을 실행하여 EC2 인스턴스를 생성하고 응답 객체를 받음
 		RunInstancesResult run_response = ec2.runInstances(run_request);
+
+	    	// 응답에서 생성된 인스턴스의 ID를 가져옴
 		String instance_id = run_response.getReservation().getInstances().get(0).getInstanceId();
-		System.out.printf("Successfully created instance %s based on AMI %s\n", instance_id, ami_id);
+
+	    	// 생성된 인스턴스의 ID와 AMI 정보를 출력
+	    	System.out.printf("Successfully created instance %s based on AMI %s\n", instance_id, ami_id);
 	    } catch (AmazonServiceException ase) {
+	    
+	    	// AWS 서비스 호출 중 발생한 예외 처리
 		System.err.println("Service Exception: " + ase.getMessage());
 	    } catch (AmazonClientException ace) {
+
+	     	// 클라이언트 측에서 발생한 예외 처리
 		System.err.println("Client Exception: " + ace.getMessage());
 	    }
    }
 
 
+    // 특정 필터를 사용하여 EC2 AMI(이미지) 목록을 출력하는 메서드
     public static void listImages() {
 	    
         System.out.println("Listing images...");
 	    
         try {
+	    // AMI 정보를 요청하기 위한 DescribeImagesRequest 객체 생성
             DescribeImagesRequest request = new DescribeImagesRequest();
+
+	    // 필터 추가: 이미지 이름 "aws-htcondor-slave"  검색
             request.getFilters().add(new Filter().withName("name").withValues("aws-htcondor-slave"));
-            DescribeImagesResult results = ec2.describeImages(request);
+
+	    // 요청 실행 및 응답 받기
+	    DescribeImagesResult results = ec2.describeImages(request);
+
+	    // 검색된 이미지가 없는 경우 메시지 출력 후 종료
             if (results.getImages().isEmpty()) {
                 System.out.println("No images found with the specified filter.");
                 return;
             }
+
+	    // 검색된 이미지 목록 출력
             for (Image image : results.getImages()) {
                 System.out.printf("[ImageID] %s, [Name] %s, [Owner] %s\n",
                     image.getImageId(), image.getName(), image.getOwnerId());
             }
         } catch (AmazonServiceException ase) {
+		
+	    // AWS 서비스 호출 중 발생한 예외 처리
             System.err.println("Service Exception: " + ase.getMessage());
         }
     }
 
+    // condor_status 명령을 실행하고 결과를 출력하는 메서드
     public static void executeCondorStatus() {
 	    
 	    System.out.println("Executing condor_status...");
 	    
 	    try {
+		    
+		// condor_status 명령 실행 (절대 경로 사용)
 		Process process = Runtime.getRuntime().exec("/usr/bin/condor_status"); // 절대 경로 사용
+		
+		// 명령 실행 결과를 읽기 위한 BufferedReader 생성
 		BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+
+		 // 명령 실행 결과를 한 줄씩 읽어서 출력
 		String line;
 		while ((line = reader.readLine()) != null) {
 		    System.out.println(line);
 		}
+
+		// 프로세스가 종료될 때까지 대기
 		process.waitFor();
+		// 명령 실행 성공 메시지 출력
 		System.out.println("condor_status executed successfully.");
 	    } catch (Exception e) {
+
+		// 명령 실행 중 발생한 모든 예외를 처리
 		System.err.println("Error executing condor_status: " + e.getMessage());
 	    }
     }
@@ -382,15 +422,25 @@ public class awsTest {
 		    System.err.println("Error listing instance types: " + e.getMessage());
 		}
       }
+
+      // 주어진 인스턴스 ID에 대한 세부 정보를 가져오는 메서드
       public static void getInstanceDetails(String instance_id) {
 	      
 		System.out.println("Getting details for instance: " + instance_id);
 	      
 		try {
+
+		    // DescribeInstances 요청 객체 생성
 		    DescribeInstancesRequest request = new DescribeInstancesRequest().withInstanceIds(instance_id);
+
+		    // 요청을 실행하여 응답 객체를 받음
 		    DescribeInstancesResult response = ec2.describeInstances(request);
-		    for (Reservation reservation : response.getReservations()) {
+
+		    // 응답 내 예약(Reservation) 객체를 순회
+		    for (Reservation reservation : response.getReservations()) {	
+			// 예약 내 각 인스턴스 정보 순회
 		        for (Instance instance : reservation.getInstances()) {
+			    // 인스턴스 세부 정보 출력
 		            System.out.printf("[Instance ID] %s, [State] %s, [Type] %s, [Launch Time] %s\n",
 		                    instance.getInstanceId(), instance.getState().getName(), instance.getInstanceType(),
 		                    instance.getLaunchTime());
@@ -401,31 +451,41 @@ public class awsTest {
 		}
      }
      
-    
+    // 주어진 인스턴스 ID를 사용하여 EC2 인스턴스를 종료하는 메서드
     public static void terminateInstance(String instance_id) {
 	    
         System.out.println("Terminating instance: " + instance_id);
 	    
         try {
+		
+	    // EC2 인스턴스 종료 요청 객체 생성
             TerminateInstancesRequest request = new TerminateInstancesRequest().withInstanceIds(instance_id);
             ec2.terminateInstances(request);
             System.out.printf("Successfully terminated instance %s\n", instance_id);
         } catch (AmazonServiceException ase) {
+
+	    // AWS 서비스 호출 중 발생한 예외 처리	
             System.err.println("Service Exception: " + ase.getMessage());
         }
     }
-    
+
+    // 현재 AWS 계정과 리전에서 사용 가능한 모든 보안 그룹(Security Groups)을 나열
     public static void listSecurityGroups() {
 	    
 	    System.out.println("Listing security groups...");
 	    
 	    try {
+		
+		// 보안 그룹 정보를 요청하여 결과를 반환받음
 		DescribeSecurityGroupsResult result = ec2.describeSecurityGroups();
+
+		// 각 보안 그룹 정보를 순회하며 출력
 		for (SecurityGroup sg : result.getSecurityGroups()) {
 		    System.out.printf("[Group ID] %s, [Group Name] %s, [Description] %s, [VPC ID] %s\n",
 		            sg.getGroupId(), sg.getGroupName(), sg.getDescription(), sg.getVpcId());
 		}
 	    } catch (AmazonServiceException ase) {
+		// AWS 서비스 호출 중 발생한 예외 처리
 		System.err.println("Service Exception: " + ase.getMessage());
 	    }
     }
