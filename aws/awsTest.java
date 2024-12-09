@@ -156,7 +156,9 @@ public class awsTest {
 
 
     public static void createSpecificInstance(String instanceType) {
+	    
         System.out.println("Creating an instance of type: " + instanceType);
+	    
         try {
 	    // EC2 인스턴스 생성 요청을 구성
             RunInstancesRequest request = new RunInstancesRequest()
@@ -180,8 +182,10 @@ public class awsTest {
 
 	// EC2 인스턴스 목록을 출력하는 메서드
 	public static void listInstances() {
+		
         System.out.println("Listing instances...");
         boolean done = false; // 페이징된 응답 처리 여부를 확인하기 위한 변수
+		
         try {
 	    // DescribeInstances 요청 객체 생성
             DescribeInstancesRequest request = new DescribeInstancesRequest();
@@ -220,7 +224,9 @@ public class awsTest {
     }
 
     public static void availableZones() {
+	    
         System.out.println("Available zones...");
+	    
         try {
             DescribeAvailabilityZonesResult availabilityZonesResult = ec2.describeAvailabilityZones();
             for (AvailabilityZone zone : availabilityZonesResult.getAvailabilityZones()) {
@@ -234,7 +240,9 @@ public class awsTest {
 
     // 가용 영역(Availability Zones)을 출력하는 메서드
     public static void availableRegions() {
+	    
         System.out.println("Available regions...");
+	    
         try {
 		
 	    // 가용 영역 정보를 요청하여 결과를 반환받음
@@ -251,19 +259,28 @@ public class awsTest {
         }
     }
 
+    // 주어진 인스턴스 ID를 사용하여 EC2 인스턴스를 시작하는 메서드
     public static void startInstance(String instance_id) {
+	    
         System.out.printf("Starting instance %s...\n", instance_id);
+	    
         try {
+	    // EC2 인스턴스를 시작하기 위한 요청 객체 생성
             StartInstancesRequest request = new StartInstancesRequest().withInstanceIds(instance_id);
             ec2.startInstances(request);
             System.out.printf("Successfully started instance %s\n", instance_id);
         } catch (AmazonServiceException ase) {
+
+	    // AWS 서비스 호출 중 발생한 예외 처리
             System.err.println("Service Exception: " + ase.getMessage());
         }
     }
 
+    // 주어진 인스턴스 ID를 사용하여 EC2 인스턴스를 중지하는 메서드
     public static void stopInstance(String instance_id) {
+
         System.out.printf("Stopping instance %s...\n", instance_id);
+	    
         try {
             StopInstancesRequest request = new StopInstancesRequest().withInstanceIds(instance_id);
             ec2.stopInstances(request);
@@ -274,7 +291,9 @@ public class awsTest {
     }
 
     public static void rebootInstance(String instance_id) {
+	    
         System.out.printf("Rebooting instance %s...\n", instance_id);
+	    
         try {
             RebootInstancesRequest request = new RebootInstancesRequest().withInstanceIds(instance_id);
             ec2.rebootInstances(request);
@@ -285,7 +304,9 @@ public class awsTest {
     }
     
     public static void createInstance(String ami_id) {
+	    
     System.out.printf("Creating instance with AMI %s...\n", ami_id);
+	    
     try {
 		RunInstancesRequest run_request = new RunInstancesRequest()
 		        .withImageId(ami_id)
@@ -306,7 +327,9 @@ public class awsTest {
 
 
     public static void listImages() {
+	    
         System.out.println("Listing images...");
+	    
         try {
             DescribeImagesRequest request = new DescribeImagesRequest();
             request.getFilters().add(new Filter().withName("name").withValues("aws-htcondor-slave"));
@@ -325,7 +348,9 @@ public class awsTest {
     }
 
     public static void executeCondorStatus() {
+	    
 	    System.out.println("Executing condor_status...");
+	    
 	    try {
 		Process process = Runtime.getRuntime().exec("/usr/bin/condor_status"); // 절대 경로 사용
 		BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
@@ -342,7 +367,9 @@ public class awsTest {
 
 
       public static void listInstanceTypes() {
+	      
 		System.out.println("Listing instance types...");
+	      
 		try {
 		    // 일부 인스턴스 유형 출력
 		    System.out.println("t2.micro, t2.small, m5.large, c5.large, r5.large");
@@ -351,7 +378,9 @@ public class awsTest {
 		}
       }
       public static void getInstanceDetails(String instance_id) {
+	      
 		System.out.println("Getting details for instance: " + instance_id);
+	      
 		try {
 		    DescribeInstancesRequest request = new DescribeInstancesRequest().withInstanceIds(instance_id);
 		    DescribeInstancesResult response = ec2.describeInstances(request);
@@ -369,7 +398,9 @@ public class awsTest {
      
     
     public static void terminateInstance(String instance_id) {
+	    
         System.out.println("Terminating instance: " + instance_id);
+	    
         try {
             TerminateInstancesRequest request = new TerminateInstancesRequest().withInstanceIds(instance_id);
             ec2.terminateInstances(request);
@@ -380,7 +411,9 @@ public class awsTest {
     }
     
     public static void listSecurityGroups() {
+	    
 	    System.out.println("Listing security groups...");
+	    
 	    try {
 		DescribeSecurityGroupsResult result = ec2.describeSecurityGroups();
 		for (SecurityGroup sg : result.getSecurityGroups()) {
